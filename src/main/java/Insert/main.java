@@ -19,10 +19,12 @@ import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.datastax.driver.core.utils.UUIDs;
 
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 
 
@@ -37,20 +39,27 @@ public class main {
 //    private static String cluster_name = "docker-cluster";
 
     public static void main(String[] args){
-        deleteBySearch();
+        sendResponse();
+//    getResponse();
+//        deleteBySearch();
+        UUID teste = UUID.fromString("a898c2e4-ffd7-11e8-8eb2-f2801f1b9fd1");
+
+        System.out.println(UUIDs.unixTimestamp(teste));
+
+        System.out.println(teste.toString());
     }
 
     private static void deleteBySearch(){
-
+        HttpHost[] httpHosts = new HttpHost[1];
+        httpHosts[0] = new HttpHost(url, port, "http");
         RestHighLevelClient client = new RestHighLevelClient(
-                RestClient.builder(
-                        new HttpHost(url, port, "http")));
+                RestClient.builder(httpHosts));
 
         MeuListener<BulkByScrollResponse> listener = new MeuListener<>();
 
         DeleteByQueryRequest request =
                 new DeleteByQueryRequest("iotplatform_alarm");
-        request.setQuery(QueryBuilders.termQuery("id","testeeeee"));
+        request.setQuery(QueryBuilders.termQuery("id","a898c2e4-ffd7-11e8-8eb2-f2801f1b9fd1"));
 
         client.deleteByQueryAsync(request,RequestOptions.DEFAULT, listener);
         System.out.println(listener.waitAndRetrieve().getDeleted());
@@ -67,18 +76,18 @@ public class main {
             };
 
             Map<String, Object> jsonMap = new HashMap<>();
-            jsonMap.put("id", "testeeeee");
-            jsonMap.put("tenantId", "dhenny");
-            jsonMap.put("originatorId", "alguem");
+            jsonMap.put("id", "a898c2e4-ffd7-11e8-8eb2-f2801f1b9fd1");
+            jsonMap.put("tenantId", "a898c2e4-ffd7-11e8-8eb2-f2801f1b9fd1");
+            jsonMap.put("originatorId", "a898c2e4-ffd7-11e8-8eb2-f2801f1b9fd1");
             jsonMap.put("originatorType", "ALARM");
             jsonMap.put("type", "ALARM");
             jsonMap.put("severity", "CRITICAL");
-            jsonMap.put("status", "ANY");
+            jsonMap.put("status", "CLEARED_UNACK");
             jsonMap.put("startTs", 21);
             jsonMap.put("endTs", 22);
             jsonMap.put("ackTs", 23);
             jsonMap.put("clearTs", 24);
-            jsonMap.put("details", "Teste");
+            jsonMap.put("details", "{}");
             jsonMap.put("propagate", false);
             IndexRequest indexRequest = new IndexRequest("iotplatform_alarm", "data").source(jsonMap);
 
@@ -100,20 +109,17 @@ public class main {
     private static void getResponse(){
         try {
 
+            HttpHost[] httpHosts = new HttpHost[1];
+            httpHosts[0] = new HttpHost(url, port, "http");
             RestHighLevelClient client = new RestHighLevelClient(
-                    RestClient.builder(
-                            new HttpHost(url, port, "http")));
-
-            MeuFuture listener = new MeuFuture();
-
-            SearchRequest searchRequest = new SearchRequest();
+                    RestClient.builder(httpHosts));
+            MeuListener<SearchResponse> listener = new MeuListener<>();
+            SearchRequest searchRequest = new SearchRequest("iotplatform_alarm");
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+//            BoolQueryBuilder qb = QueryBuilders.boolQuery()
+//            .must(QueryBuilders.termQuery("id","965720ae-3b03-489e-903d-cac27341dacb"));
 
-            BoolQueryBuilder qb = QueryBuilders.boolQuery()
-            .must(QueryBuilders.termQuery("id","testeiot"))
-            .must(QueryBuilders.termQuery("tenant_id","dhenny"));
-
-            searchSourceBuilder.query(qb);
+            searchSourceBuilder.query(QueryBuilders.termQuery("id","965720ae-3b03-489e-903d-cac27341dacb"));
             searchRequest.source(searchSourceBuilder);
 
             client.searchAsync(searchRequest,RequestOptions.DEFAULT, listener);
@@ -144,6 +150,8 @@ public class main {
         service.shutdown();
         return teste;
     }
+
+
 
 
 
